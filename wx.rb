@@ -12,15 +12,15 @@ end
 
 post '/hi' do
   if(!check_weixin_legality) then return [403,{},"Forbidden"]; end
-  puts "@@@@@@"
-  
-  ""
+
   tempfile=params[:datafile][:tempfile]
   content_type 'text/xml'
   if (tempfile) && doc=parseXML(tempfile)
       @doc=doc.elements["xml"]
       @result = 'echo: '+ @doc.elements["Content"].text
       erb :response, :format=>:xml
+    else
+    "wrong format!"
   end
 end
 
