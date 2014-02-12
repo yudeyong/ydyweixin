@@ -1,0 +1,16 @@
+Redis structure
+
+1. 题库
+	KEY_QUES+ID = "人,白痴,鬼"
+	KEY_QUES_COUNT = count of questions
+2. 组
+	KEY_GROUPS = set[groupid1,groupid2]
+3. 组明细
+	KEY_L_G_Q+groupid = list[S_HUM,S_IDT,S_GOS], 组,问题
+	KEY_L_G_S+groupid = list[当局人身份] #当局用户数个元素,
+	KEY_L_G_U+groupid = list[owner,当局用户] #当局用户数+1个元素
+	用户与结果在对应错着一个 KEY_G_U[1] = KEY_G_Q[0]
+	KEY_GRP_COUNT+groupid = 该组当前未获取问题用户数
+4. 用户
+	KEY_L_USR+id = list[groupid,答案,身份] #身份{人,鬼,白痴,owner}
+	KEY_L_USR+id = list[groupid,当前局人数(不算owner),owner] #if 身份=owner
