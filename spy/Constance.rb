@@ -2,11 +2,11 @@
 class Constance
     KEY_QUES = "QUES:"
     KEY_QUES_COUNT = KEY_QUES+"COUNT"
-    KEY_S_GROUPS = "GROUP" #set[groupid1,groupid2]
+    KEY_Z_GROUPS = "GROUP" #set[groupid1,groupid2]
     KEY_L_G_Q = "G:Q:" #list[S_HUM,S_IDT,S_GOS], 组,问题
     KEY_L_G_S = "G:S:" #list, 组,身份, #当局用户数个元素
     KEY_L_G_U = "G:U:" #组,用户, #当局用户数+1个元素
-    KEY_GRP_COUNT = "G:U:COUNT" #该组当前未获取问题用户数
+    KEY_GRP_COUNT = "G:U:COUNT:" #该组当前未获取问题用户数
     KEY_L_USR = "USR:"
     #= list[groupid,答案,身份] #身份{人,鬼,白痴,owner}
     #= list[groupid,当前局人数(不算owner),owner] #if 身份=owner
@@ -16,6 +16,10 @@ class Constance
     S_OWN=3
     STATUS_ = ["人", "白痴", "鬼", "own"]
     
+    EXPIRE_TERM = 1000*60*60 #1 hour
+    
+    CHECK_EXPIRATION_COUNT = 5 #每次检查过期项目数>1
+    #shuffle array[]
     def self.shuffle(list)
         l = list.length
         cur = 0
