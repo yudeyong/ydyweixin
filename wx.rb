@@ -17,6 +17,7 @@ post '/hi' do
   content_type 'text/xml'
   if (tempfile) && doc=parseXML(tempfile)
       @doc=doc.elements["xml"]
+      p @doc
       @result = 'echo: '+ @doc.elements["Content"].text
       erb :response, :format=>:xml
     else
