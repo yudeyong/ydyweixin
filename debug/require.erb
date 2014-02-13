@@ -1,0 +1,9 @@
+# response.erb
+<xml>
+    <ToUserName><![CDATA[<%= account %>]]></ToUserName>
+    <FromUserName><![CDATA[<%= uid %>]]></FromUserName>
+    <CreateTime><%= Time.now.to_i %></CreateTime>
+    <MsgType><![CDATA[text]]></MsgType>
+    <Content><![CDATA[<%= content %>]]></Content>
+    <FuncFlag>0</FuncFlag>
+</xml>
