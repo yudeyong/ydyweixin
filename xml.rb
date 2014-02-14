@@ -1,7 +1,8 @@
 require "rexml/document"  
 include REXML  
-def parseXML(filename) 
-  doc = Document.new(File.new(filename))  
+
+def parseXMLFile(filename)
+  doc = Document.new(File.new(filename))
 #  root = doc.root  
 #  puts "*" * 8
   #puts doc.elements["xml"].count
@@ -12,4 +13,8 @@ def parseXML(filename)
 #  }
   #puts doc.elements["xml/ToUserName"].text
 #  return doc
+end
+
+def parseXML(str)
+    doc = Document.new(str)
 end

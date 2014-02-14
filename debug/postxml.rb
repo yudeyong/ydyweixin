@@ -1,6 +1,7 @@
 require "net/http"
 require "uri"
 require "erb"
+require "../xml.rb"
 
 class Debugwx
 BOUNDARY = "AaB03x"
@@ -27,7 +28,7 @@ def req(uid, content)
     post_body << s
     post_body << "\r\n--#{BOUNDARY}--\r\n"
 
-puts post_body
+#puts post_body
 
 
     http = Net::HTTP.new(uri.host, uri.port)
@@ -38,10 +39,41 @@ puts post_body
 
 #return
     resp = http.request(request)
-    p resp['content-type']
-    puts resp.body
+    #    p resp['content-type']
+    #puts resp.body
+
+#tempfile=params[:datafile][:tempfile]
+#content_type 'text/xml'
+    if doc=parseXML(resp.body)
+        d =doc.elements["xml"]
+        result = d.elements["Content"].text
+    end
 end
 end
 if __FILE__ == $0
-	Debugwx.new.req("u1", "new")
+    require "../spy/SpyHandler"
+=begin
+    require "../WeChatHandler"
+class DbgDebugwx
+    include WeChatHandler
+    def WeChattextHandler(xml)
+        p xml
+    end
+    def method_missing(name,*args)
+        p "wrong function called: #{name}"
+    end
+
+end
+=end
+Hh = SpyHandler.new
+    def create(msgtype)
+        #        dd = DbgDebugwx.new
+        Hh.Handler('x')
+        Hh.send("WeChat#{msgtype}Handler", "tt")
+    end
+#create("text");return
+    s = Debugwx.new.req("u1", "new")
+    i = s.index(' ')
+    s = s[0..(i-1)] if ((i)!=nil && i>0)
+    p s
 end
