@@ -1,10 +1,10 @@
 require 'csv'
 require 'redis'
-require './Constance'
+require File.dirname(__FILE__) +'/Constance'
 
 def loadSpyDb(r)
     l=0
-    CSV.foreach('spy.csv','r') do |row|
+    CSV.foreach(File.dirname(__FILE__) +'/spy.csv','r') do |row|
         i = 0
         if row!=nil
             st = makewords(row)
@@ -19,4 +19,3 @@ end
 def makewords(row)
     row[0] + "," + row[1] + ",字数:" + row[0].length.to_s
 end
-#loadSpyDb(Redis.new)

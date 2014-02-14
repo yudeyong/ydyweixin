@@ -1,6 +1,6 @@
 require "redis"
-require "./spydataloader"
-require "./Constance"
+require File.dirname(__FILE__) +"/spydataloader"
+require File.dirname(__FILE__) +"/Constance"
 #require 'singleton'
 
 class Spygroup
@@ -10,7 +10,7 @@ class Spygroup
     def self.initialize
         r = Redis.new
         r.flushdb
-        #loadSpyDb(r)
+        loadSpyDb(r)
 
         r
     end
@@ -19,11 +19,11 @@ class Spygroup
     # str : 词语数组,如果数组长度2,str[0]人的词,str[1]白痴的词,鬼的内容只有人的词的字数,如果长3,str[2],鬼的描述
     # ownerid : 创建者id
     # human :人的数,包含1个白痴
-    # ghost :鬼的数
-    def self.getNewGroup(str, ownerid, human, ghost)
+    # spy :鬼的数
+    def self.getNewGroup( ownerid, human, spy, str=[])
         self.releaseGroupbyUsr(ownerid)
         self.releaseExpiration(Constance::CHECK_EXPIRATION_COUNT)#每新局,检查部分过期数据并释放
-        self.createGroup(str, ownerid, human, ghost)
+        self.createGroup(str, ownerid, human, spy)
     end
 #count, check count, -1 for all
     def self.releaseExpiration(count)
@@ -70,7 +70,7 @@ class Spygroup
     end
 #获取问题词组
     def self.getWord(str)
-        if str==nil
+        if str.length==0
             return @@r[Constance::KEY_QUES+rand(@@r[Constance::KEY_QUES_COUNT].to_i).to_s]
         end
         case ( str.length )
@@ -84,27 +84,28 @@ class Spygroup
     end
 #创建组相关数据,词组内容
 #返回组id
-    def self.createGroup(str, ownerid, human, ghost)
+    def self.createGroup(str, ownerid, human, spy)
         if (s = self.getWord(str))==nil
             return nil
         end
         gid = getNewGroupID(ownerid)
-        initGroup(gid, ownerid,human,ghost,s )
+        initGroup(gid, ownerid,human,spy,s )
         gid
     end
 #创建redis中组相应的数据
-    def self.initGroup(g, ownerid, human,ghost,s )
+    def self.initGroup(g, ownerid, human,spy,s )
         gid = g.to_s
 
-        total = human+ghost
+        total = human+spy
         @@r.rpush(Constance::KEY_L_USR+ownerid, [gid,(total), Constance::STATUS_[Constance::S_OWN]])
 
         w = s.split(',')
         @@r.rpush(Constance::KEY_L_G_Q+gid,w)
 
         l = []
-        l[0]=Constance::S_IDT
-        (human-1).downto(1){|x|l[x]=Constance::S_HUM}
+        i = (total+3)/7
+        (i-1).downto(0){|x|l[x]=Constance::S_IDT}
+        (human-1).downto(i){|x|l[x]=Constance::S_HUM}
         (total-1).downto(human){|x|l[x]=Constance::S_GOS}
         Constance::shuffle(l)
 #p l
@@ -168,18 +169,20 @@ end
 
 ############
 #debug area
+if __FILE__ == $0
 =begin
 =end
 DEBUG_COUNT = 1
-def dbg_group(human,ghost)
+def dbg_group(human,spy)
     s =["aren","b白","dd鬼"]
     s1 = []
     i = rand(100).to_s
     (s.length-1).downto(0) {|x| s1[x] = s[x]+i}
-    gid = Spygroup.getNewGroup(s1, "own"+rand(DEBUG_COUNT+1).to_s, human, ghost)
-    (human+ghost+1).downto(1){|x| p "##"+Spygroup.addUsr(gid,"u"+x.to_s+gid.to_s).to_s}
+    gid = Spygroup.getNewGroup( "own"+rand(DEBUG_COUNT+1).to_s, human, spy,s1)
+    (human+spy+1).downto(1){|x| p "##"+Spygroup.addUsr(gid,"u"+x.to_s+gid.to_s).to_s}
 end
-DEBUG_COUNT.downto(0){|x|dbg_group(3+x,1+(x/5+1));p '*'*10}
+DEBUG_COUNT.downto(0){|x|dbg_group(8,3);p '*'*10}
 #Spygroup::releaseExpiration(1)
 =begin
 =end
+end

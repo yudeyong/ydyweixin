@@ -22,8 +22,13 @@ module WeChatHandler
         xml = xml.elements["xml"]
         send("WeChat#{xml.elements['MsgType'].text}Handler", xml)
     end
+=begin
+= end    
     def method_missing(name,*args)
         p "wrong function called: #{name}"
         #    super name
     end
+=begin
+=end    
+    
 end
