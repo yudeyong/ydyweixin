@@ -7,10 +7,9 @@ require "./spy/SpyHandler.rb"
 handler = SpyHandler.new
 
 get '/hi' do
-  if(!check_weixin_legality) then return [403,{},"Forbidden"]; end
-#  puts "my######{33}"
+	if(!check_weixin_legality) then return [403,{},"Forbidden"]; end
 #  puts params
-    params[:echostr]# + Time.now.to_s
+	params[:echostr]# + Time.now.to_s
 end
 
 post '/hi' do
@@ -19,17 +18,12 @@ post '/hi' do
   tempfile=params[:datafile][:tempfile]
   content_type 'text/xml'
   if (tempfile) && doc=parseXMLFile(tempfile)
-      @doc=doc.elements["xml"]
-      if true
-           handler.Handler(doc)
-           @result = "r"
-        else
-      #p @doc
-      @result = @doc.elements["MsgType"].text+":" + @doc.elements["Content"].text
-      
-      end
-      erb :response, :format=>:xml
-    else
+#    @doc=doc.elements["xml"]
+#puts doc.elements["xml"]
+	@doc = handler.Handler(doc).to_s
+    #puts "^"*11 ,@doc
+    #erb :@doc, :format=>:xml
+   else
     "wrong format!"
   end
 end

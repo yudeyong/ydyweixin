@@ -11,18 +11,12 @@ class SpyHandler
     TOOMUCHPERSON = "人也太多了吧"
     TOOLESSPERSON = "人也太少了吧"
 	#
-	def isI(str)
+	def self.isI(str)
 		(str=~/^\d+?$/)!=nil
 	end
 	#
     def WeChattextHandler( xml )
-        p "#"*11
-        cmd = xml.elements["Content"].text
-        return AUTOREPLY if cmd[0]!='!' && cmd[0]!='！' && (!isI(cmd))
-        return parseCMD(cmd[1..cmd.length],xml.elements["FromUserName"].text) if(cmd[0]=='!' || cmd[0]=='！')
-        
-        return addUser(cmd,xml.elements["FromUserName"].text)
-        
+		return formatResponse( xml, textHandler(xml))        
     end
     
     COMMAND = {
@@ -30,6 +24,23 @@ class SpyHandler
 		}
 	
     private
+    def textHandler(xml)
+        cmd = xml.elements["Content"].text
+        return AUTOREPLY if cmd[0]!='!' && cmd[0]!='！' && (!self.class.isI(cmd))
+        return parseCMD(cmd[1..cmd.length],xml.elements["FromUserName"].text) if(cmd[0]=='!' || cmd[0]=='！')
+#p "%"*11
+        return addUser(cmd,xml.elements["FromUserName"].text)
+	end
+    def formatResponse( xml, content)
+		xml.elements["FromUserName"].text , xml.elements["ToUserName"].text = xml.elements["ToUserName"].text , xml.elements["FromUserName"].text  
+		xml.elements["Content"].text = content
+		xml.elements["CreateTime"].text = Time.now.to_i.to_s
+		xml
+    end
+    #
+    def addUser( gid, uid)
+		Spygroup::addUsr( gid, uid)
+    end
     #
     def parseCMD(cmd, uid)
 		i = cmd.index(' ')
@@ -49,7 +60,7 @@ class SpyHandler
     end
     #
     def createGame(uid, data)
-		return PARAM_WRONG1 if  !isI(data[0]) || !isI(data[1])
+		return PARAM_WRONG1 if  !self.class.isI(data[0]) || !self.class.isI(data[1])
 		total = data.shift.to_i
 		spy = data.shift.to_i
 		return TOOLESSPERSON if total<4 

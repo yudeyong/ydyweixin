@@ -9,7 +9,7 @@ class Spygroup
     #
     def self.initialize
         r = Redis.new
-        r.flushdb
+        #r.flushdb
         loadSpyDb(r)
 
         r
@@ -37,17 +37,19 @@ class Spygroup
         return "不存在的局id" if (t=@@r.zscore(Constance::KEY_Z_GROUPS, gid))==nil
         gid = gid.to_s #implicit type as string
         if ((usr =@@r.lrange(Constance::KEY_L_USR+uid,0,-1))!=nil && usr.length>0)#用户已经在了
-            if usr [0]==gid
-                return usr[1] #是当前局用户
+        #p  usr
+            if usr [0]==gid	
+                 return usr[1] + self.getText( @@r[Constance::KEY_GRP_COUNT+gid].to_i, false)#是当前局用户
             else
                 releaseGroupbyUsr(uid)#用户所在游戏局已过期
             end
         end
+        #p @@r.lrange(Constance::KEY_L_USR+uid,0,-1)
         return "已满" if (@@r[Constance::KEY_GRP_COUNT+gid].to_i<=0)
         if ((s=@@r.lindex(Constance::KEY_L_USR + gid, 1).to_s)==nil || s.length==0)
             #p @@r.lindex(Constance::KEY_L_USR+uid,1)
             @@r.rpush(Constance::KEY_L_USR+uid,gid)#增加用户, 必须立即增加用户key,防快速请求重复加入
-            @@r.decr(Constance::KEY_GRP_COUNT+gid)#减等待人数
+            c = @@r.decr(Constance::KEY_GRP_COUNT+gid)#减等待人数
             ord = @@r.rpush(Constance::KEY_L_G_U+gid, uid )-2# 组增加用户
             #p "1.s=#{s}; ord=#{ord}"
             ord = @@r.lindex(Constance::KEY_L_G_S+gid,ord)#获取身份
@@ -59,12 +61,16 @@ class Spygroup
             
             #update expiration time
             l = Time.now.to_i - t + Constance::EXPIRE_TERM
-            @@r.zincrby(Constance::KEY_Z_GROUPS, l, gid )
+            @@r.zincrby(Constance::KEY_Z_GROUPS, l, gid ).to_s 
+            s += self.getText(c,true)
         end
         s
     end
 ##########################
     private
+    def self.getText(c,flag)
+		c>0 ? "\n还有#{c}人未加入" : (flag ? "\n人齐，游戏开始" : "")
+    end
     def initialize
         p "deprecated method, instance should be creat by getNewGroup"
     end
@@ -85,21 +91,23 @@ class Spygroup
 #创建组相关数据,词组内容
 #返回组id
     def self.createGroup(str, ownerid, human, spy)
+    
         if (s = self.getWord(str))==nil
             return nil
         end
         gid = getNewGroupID(ownerid)
         initGroup(gid, ownerid,human,spy,s )
-        gid
+        "游戏编号:#{gid}\n其他人可输入此编号，开始游戏。" 
     end
 #创建redis中组相应的数据
     def self.initGroup(g, ownerid, human,spy,s )
         gid = g.to_s
 
         total = human+spy
-        @@r.rpush(Constance::KEY_L_USR+ownerid, [gid,(total), Constance::STATUS_[Constance::S_OWN]])
+        @@r.rpush(Constance::KEY_L_USR+ownerid, [gid,"总人数：#{total}", Constance::STATUS_[Constance::S_OWN]])
 
         w = s.split(',')
+        w[2] = "你卧底:"+w[2]
         @@r.rpush(Constance::KEY_L_G_Q+gid,w)
 
         l = []
@@ -115,7 +123,7 @@ class Spygroup
 
         @@r[Constance::KEY_GRP_COUNT+gid] = total
     end
-DBG_RELEASE = false
+DBG_RELEASE = !false
 #
     def self.releaseGroupbyGid(gid)
 p "release #{gid}"
