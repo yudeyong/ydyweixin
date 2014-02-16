@@ -16,7 +16,7 @@ class Constance
     S_OWN=3
     STATUS_ = ["人", "白痴", "鬼", "own"]
     
-    EXPIRE_TERM = 1000*60*60 #1 hour
+    EXPIRE_TERM = 60#*60 #1 hour
     
     CHECK_EXPIRATION_COUNT = 5 #每次检查过期项目数>1
     #shuffle array[]

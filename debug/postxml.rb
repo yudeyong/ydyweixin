@@ -50,10 +50,16 @@ Hh = SpyHandler.new
 			doc = parseXML(s)
 			doc = Hh.Handler(doc)
 		end
-		if doc=parseXML(doc)
+		if doc=parseXML(doc.to_s)
 			d =doc.elements["xml"]
 			result = d.elements["Content"].text
 		end
+	end
+	
+	def self.findGid(s)
+		i = s.index(":")+1
+		j = s.index("其")-2
+		s[i..j]
 	end
 end
 if __FILE__ == $0
@@ -80,10 +86,8 @@ end
 p "@"*11
 	total = 4
     puts s = Debugwx::req("o"+rand(3).to_s, "！new #{total} 1  ren   bai ")
-    i = s.index(":")+1
-    j = s.index("其")-2
-    s = s[i..j].to_i
-    total.downto(1){|x| u = "u"+rand(4).to_s;puts "x=#{x},u=#{u},#{Debugwx::req(u.to_s,s)}"} if s.is_a?Integer
+    s = Debugwx::findGid(s).to_i
+    total.downto(1){|x| u = "u"+rand(44).to_s;puts "x=#{x},u=#{u},#{Debugwx::req(u.to_s,s)}"} if s.is_a?Integer
     
     i = s.to_s.index(' ')
     s = s[0..(i-1)] if ((i)!=nil && i>0)

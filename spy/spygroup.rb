@@ -123,10 +123,10 @@ class Spygroup
 
         @@r[Constance::KEY_GRP_COUNT+gid] = total
     end
-DBG_RELEASE = !false
+DBG_RELEASE = false
 #
     def self.releaseGroupbyGid(gid)
-p "release #{gid}"
+p "R"*11+"  release #{gid},#{caller[0][caller[0].index("spy")..(caller[0].length-1)]}"
 if DBG_RELEASE
     p @@r.keys("U*"),@@r.zrange("GROUP",0,-1)
     p @@r.keys("G*"),@@count.to_s+";"+gid.to_s
@@ -187,6 +187,8 @@ def dbg_group(human,spy)
     i = rand(100).to_s
     (s.length-1).downto(0) {|x| s1[x] = s[x]+i}
     gid = Spygroup.getNewGroup( "own"+rand(DEBUG_COUNT+1).to_s, human, spy,s1)
+    require "../debug/postxml.rb"
+    gid = Debugwx::findGid(gid)
     (human+spy+1).downto(1){|x| p "##"+Spygroup.addUsr(gid,"u"+x.to_s+gid.to_s).to_s}
 end
 DEBUG_COUNT.downto(0){|x|dbg_group(8,3);p '*'*10}
