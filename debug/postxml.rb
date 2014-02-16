@@ -6,8 +6,12 @@ require "../spy/SpyHandler.rb"
 
 class Debugwx
 	BOUNDARY = "AaB03x"
-	REQUEST_OFFLINE = false
-Hh = SpyHandler.new
+	REQUEST_OFFLINE = false #debug switch
+	Hh = SpyHandler.new
+	
+	#debug for send xml to server
+	# offline switch to on, works
+	# req() also works in irb individual invoke,require ".rb" is needed
 	def self.req(uid, content)
 		uri = URI.parse('http://localhost/hi?timestamp=df&nonce=3&signature=ab25b59a6311e46a4da23644995b858d2f8bdae8&echostr=f')
 		file = "wx.xml"

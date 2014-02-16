@@ -3,10 +3,15 @@ require File.dirname(__FILE__) +"/spydataloader"
 require File.dirname(__FILE__) +"/Constance"
 #require 'singleton'
 
+#spy game core logic
+# all public function is static
+# all data saved into redis
+# more data structure reference Constance.rb
 class Spygroup
     # include Singleton
-    DENSITY = 7 #60%密度
-    #
+    DENSITY = 6 #60%密度 数据密度共10成
+    #静态初始化redis
+    #载入题库
     def self.initialize
         r = Redis.new
         #r.flushdb
@@ -15,23 +20,28 @@ class Spygroup
         r
     end
     @@r = self.initialize
-    @@count = 0
-    # str : 词语数组,如果数组长度2,str[0]人的词,str[1]白痴的词,鬼的内容只有人的词的字数,如果长3,str[2],鬼的描述
-    # ownerid : 创建者id
-    # human :人的数,包含1个白痴
+    @@count = 0 #当前游戏数量
+    # str : 词语数组,如果数组长度2,str[0]人的词,str[1]白痴的词,鬼的内容只有人的词的字数,
+    #	如果长3,str[2]=>鬼的描述.
+    #	如果长0,题库中随机获取
+    # ownerid : 创建者id，此人不任游戏角色，裁判
+    # human :人的数,包含n个白痴，n=详见initGroup
     # spy :鬼的数
     def self.getNewGroup( ownerid, human, spy, str=[])
         self.releaseGroupbyUsr(ownerid)
         self.releaseExpiration(Constance::CHECK_EXPIRATION_COUNT)#每新局,检查部分过期数据并释放
         self.createGroup(str, ownerid, human, spy)
     end
-#count, check count, -1 for all
+	#release expired group
+	#count: check count, 0 for all
+	#	expiration time reference Constance::EXPIRE_TERM
     def self.releaseExpiration(count)
         t = Time.now.to_i
         g = @@r.zrevrange( Constance::KEY_Z_GROUPS,0,count-1)
         g.each{|x|releaseGroupbyGid(x)if @@r.zscore(Constance::KEY_Z_GROUPS,x)<t }
     end
-#
+    
+	#it's clear, no more comments
     def self.addUsr(gid,uid)
 #print "add g#{gid},#{uid}\n"
         return "不存在的局id" if (t=@@r.zscore(Constance::KEY_Z_GROUPS, gid))==nil
@@ -68,13 +78,19 @@ class Spygroup
     end
 ##########################
     private
+    #optimized prompt
     def self.getText(c,flag)
 		c>0 ? "\n还有#{c}人未加入" : (flag ? "\n人齐，游戏开始" : "")
     end
+    
+    #deprecated, instance should NOT be new
     def initialize
         p "deprecated method, instance should be creat by getNewGroup"
     end
-#获取问题词组
+	#获取问题词组
+    # str : 词语数组,如果数组长度2,str[0]人的词,str[1]白痴的词,鬼的内容只有人的词的字数,
+    #	如果长3,str[2]=>鬼的描述.
+    #	如果长0,题库中随机获取
     def self.getWord(str)
         if str.length==0
             return @@r[Constance::KEY_QUES+rand(@@r[Constance::KEY_QUES_COUNT].to_i).to_s]
@@ -88,8 +104,10 @@ class Spygroup
                 nil
         end
     end
-#创建组相关数据,词组内容
-#返回组id
+	#创建组相关数据
+	#--词组内容
+	#--用户身份
+	#--返回组id
     def self.createGroup(str, ownerid, human, spy)
     
         if (s = self.getWord(str))==nil
