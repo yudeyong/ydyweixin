@@ -1,6 +1,5 @@
 require 'sinatra'
 require "./xml.rb"
-#require "./wxcontroller.rb"
 require "./spy/SpyHandler.rb"
 
 
@@ -18,7 +17,6 @@ post '/hi' do
   tempfile=params[:datafile][:tempfile]
   content_type 'text/xml'
   if (tempfile) && doc=parseXMLFile(tempfile)
-#    @doc=doc.elements["xml"]
 #puts doc.elements["xml"]
 	@doc = handler.Handler(doc).to_s
     #puts "^"*11 ,@doc

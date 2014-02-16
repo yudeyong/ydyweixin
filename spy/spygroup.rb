@@ -66,7 +66,7 @@ class Spygroup
             #p "2.s=#{s}; ord=#{ord}"
             s   = @@r.lindex(Constance::KEY_L_G_Q+gid,ord)#获取提示
             #p "3.s=#{s}; ord=#{ord}"
-            s = ("鬼:"+s ) if ord==Constance::S_GOS
+            s = ("鬼:"+s ) if ord==Constance::S_SPY
             @@r.rpush(Constance::KEY_L_USR+uid,[s,ord])#完善用户数据
             
             #update expiration time
@@ -117,22 +117,30 @@ class Spygroup
         initGroup(gid, ownerid,human,spy,s )
         "游戏编号:#{gid}\n其他人可输入此编号，开始游戏。" 
     end
-#创建redis中组相应的数据
+	#创建redis中组相应的数据
     def self.initGroup(g, ownerid, human,spy,s )
         gid = g.to_s
 
         total = human+spy
+        #owner[ gid, total, "owner"]
         @@r.rpush(Constance::KEY_L_USR+ownerid, [gid,"总人数：#{total}", Constance::STATUS_[Constance::S_OWN]])
 
         w = s.split(',')
-        w[2] = "你卧底:"+w[2]
+        w[Constance::S_SPY] = "你是卧底,提示:"+w[Constance::S_SPY]
         @@r.rpush(Constance::KEY_L_G_Q+gid,w)
 
         l = []
+        #白痴生成算法
+        #3人：2人，0白，1卧
+        #4-10人：1白
+        #11-20人：2白
+        #>20人：人太多了
         i = (total+3)/7
+        
         (i-1).downto(0){|x|l[x]=Constance::S_IDT}
         (human-1).downto(i){|x|l[x]=Constance::S_HUM}
-        (total-1).downto(human){|x|l[x]=Constance::S_GOS}
+        (total-1).downto(human){|x|l[x]=Constance::S_SPY}
+        #洗牌身份
         Constance::shuffle(l)
 #p l
         @@r.rpush(Constance::KEY_L_G_S+gid, l )
@@ -141,8 +149,9 @@ class Spygroup
 
         @@r[Constance::KEY_GRP_COUNT+gid] = total
     end
+    #release 调试开关
 DBG_RELEASE = false
-#
+	#no more comments
     def self.releaseGroupbyGid(gid)
 p "R"*11+"  release #{gid},#{caller[0][caller[0].index("spy")..(caller[0].length-1)]}"
 if DBG_RELEASE
@@ -161,14 +170,15 @@ if DBG_RELEASE
     p @@r.keys("G*"),@@count.to_s+";"+gid.to_s
 end
     end
-#释放
+	#no more comments
     def self.releaseGroupbyUsr(ownerid)
         uinfo = @@r.lrange(Constance::KEY_L_USR + ownerid, 0, -1)
 #p uinfo
         return nil if uinfo==nil || uinfo.length==0
         releaseGroupbyGid( uinfo[0] )
     end
-#
+	#根据@@count获取id位数
+	#自动升位
     def self.getNewGroupID(id)
         i = 10
         d = DENSITY
@@ -178,7 +188,7 @@ end
         end
         gid = generateID(id, i)
     end
-#
+	#根据现有库生成尽量短的uuid
     def self.generateID(id, range)
         gid = rand(range)
         t = Time.now.to_i + Constance::EXPIRE_TERM

@@ -10,7 +10,7 @@ class SpyHandler
     TOOMUCHSPY = "卧底太多了吧"
     TOOMUCHPERSON = "人也太多了吧"
     TOOLESSPERSON = "人也太少了吧"
-	#
+	#字符串是否为数字
 	def self.isI(str)
 		(str=~/^\d+?$/)!=nil
 	end
@@ -19,11 +19,13 @@ class SpyHandler
 		return formatResponse( xml, textHandler(xml))        
     end
     
+    #指令，函数映射表
     COMMAND = {
 		'new'=>'newGame'
 		}
 	
     private
+    #根据输入返回content
     def textHandler(xml)
         cmd = xml.elements["Content"].text
         return AUTOREPLY if cmd[0]!='!' && cmd[0]!='！' && (!self.class.isI(cmd))
@@ -31,6 +33,8 @@ class SpyHandler
 #p "%"*11
         return addUser(cmd,xml.elements["FromUserName"].text)
 	end
+	
+	#格式化content返回值=>xml
     def formatResponse( xml, content)
 		xml.elements["FromUserName"].text , xml.elements["ToUserName"].text = xml.elements["ToUserName"].text , xml.elements["FromUserName"].text  
 		xml.elements["Content"].text = content
@@ -41,7 +45,7 @@ class SpyHandler
     def addUser( gid, uid)
 		Spygroup::addUsr( gid, uid)
     end
-    #
+    #指令处理
     def parseCMD(cmd, uid)
 		i = cmd.index(' ')
 		str = ((i)!=nil && i>0)?cmd[0..(i-1)] : (i=0,cmd)

@@ -3,7 +3,7 @@ class Constance
     KEY_QUES = "QUES:"
     KEY_QUES_COUNT = KEY_QUES+"COUNT"
     KEY_Z_GROUPS = "GROUP" #set[groupid1,groupid2]
-    KEY_L_G_Q = "G:Q:" #list[S_HUM,S_IDT,S_GOS], 组,问题
+    KEY_L_G_Q = "G:Q:" #list[S_HUM,S_IDT,S_SPY], 组,问题
     KEY_L_G_S = "G:S:" #list, 组,身份, #当局用户数个元素
     KEY_L_G_U = "G:U:" #组,用户, #当局用户数+1个元素
     KEY_GRP_COUNT = "G:U:COUNT:" #该组当前未获取问题用户数
@@ -12,7 +12,7 @@ class Constance
     #= list[groupid,当前局人数(不算owner),owner] #if 身份=owner
     S_HUM=0
     S_IDT=1
-    S_GOS=2
+    S_SPY=2
     S_OWN=3
     STATUS_ = ["人", "白痴", "鬼", "own"]
     
