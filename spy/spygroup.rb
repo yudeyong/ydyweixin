@@ -43,7 +43,7 @@ class Spygroup
     
 	#it's clear, no more comments
     def self.addUsr(gid,uid)
-#print "add g#{gid},#{uid}\n"
+print "add g#{gid},#{uid}\n"
         return "不存在的局id" if (t=@@r.zscore(Constance::KEY_Z_GROUPS, gid))==nil
         gid = gid.to_s #implicit type as string
         if ((usr =@@r.lrange(Constance::KEY_L_USR+uid,0,-1))!=nil && usr.length>0)#用户已经在了
@@ -57,7 +57,7 @@ class Spygroup
         #p @@r.lrange(Constance::KEY_L_USR+uid,0,-1)
         return "已满" if (@@r[Constance::KEY_GRP_COUNT+gid].to_i<=0)
         if ((s=@@r.lindex(Constance::KEY_L_USR + gid, 1).to_s)==nil || s.length==0)
-            #p @@r.lindex(Constance::KEY_L_USR+uid,1)
+            
             @@r.rpush(Constance::KEY_L_USR+uid,gid)#增加用户, 必须立即增加用户key,防快速请求重复加入
             c = @@r.decr(Constance::KEY_GRP_COUNT+gid)#减等待人数
             ord = @@r.rpush(Constance::KEY_L_G_U+gid, uid )-2# 组增加用户
@@ -109,34 +109,41 @@ class Spygroup
 	#--用户身份
 	#--返回组id
     def self.createGroup(str, ownerid, human, spy)
-    
+
         if (s = self.getWord(str))==nil
             return nil
         end
         gid = getNewGroupID(ownerid)
-        initGroup(gid, ownerid,human,spy,s )
+        initGroup(gid, ownerid,human,spy,s , str.length==0)
         "游戏编号:#{gid}\n其他人可输入此编号，开始游戏。" 
     end
 	#创建redis中组相应的数据
-    def self.initGroup(g, ownerid, human,spy,s )
+    #isAutoWords
+    #   true: 自动获取,开局者也参与游戏,总人数包括开局者,否则不包括
+    def self.initGroup(g, ownerid, human,spy,s, isAutoWords)
         gid = g.to_s
 
         total = human+spy
         #owner[ gid, total, "owner"]
-        @@r.rpush(Constance::KEY_L_USR+ownerid, [gid,"总人数：#{total}", Constance::STATUS_[Constance::S_OWN]])
-
         w = s.split(',')
         w[Constance::S_SPY] = "你是卧底,提示:"+w[Constance::S_SPY]
         @@r.rpush(Constance::KEY_L_G_Q+gid,w)
 
         l = []
-        #白痴生成算法
-        #3人：2人，0白，1卧
-        #4-10人：1白
-        #11-20人：2白
-        #>20人：人太多了
-        i = (total+3)/7
+        if isAutoWords then
+
+            i = spy
+            human = total
+        else
+            @@r.rpush(Constance::KEY_L_USR+ownerid, [gid,"总人数：#{total}", Constance::STATUS_[Constance::S_OWN]])
         
+            #白痴生成算法
+            #3人：2人，0白，1卧
+            #4-10人：1白
+            #11-20人：2白
+            #>20人：人太多了
+            i = (total+3)/7
+        end
         (i-1).downto(0){|x|l[x]=Constance::S_IDT}
         (human-1).downto(i){|x|l[x]=Constance::S_HUM}
         (total-1).downto(human){|x|l[x]=Constance::S_SPY}
@@ -148,6 +155,9 @@ class Spygroup
         @@r.rpush(Constance::KEY_L_G_U+gid, ownerid )
 
         @@r[Constance::KEY_GRP_COUNT+gid] = total
+
+        self.addUsr(gid,ownerid) if isAutoWords
+
     end
     #release 调试开关
 DBG_RELEASE = false
