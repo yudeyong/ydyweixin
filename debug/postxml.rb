@@ -6,7 +6,7 @@ require "../spy/SpyHandler.rb"
 
 class Debugwx
 	BOUNDARY = "AaB03x"
-	REQUEST_OFFLINE = false #debug switch
+	REQUEST_OFFLINE = !false #debug switch
 	Hh = SpyHandler.new
 	
 	#debug for send xml to server
@@ -61,11 +61,12 @@ class Debugwx
 	end
 	
 	def self.findGid(s)
-		i = s.index(":")+1
+		i = s.index("游戏编号:")+5
 		j = s.index("其")-2
 		s[i..j]
 	end
 end
+
 if __FILE__ == $0
 =begin
     require "../WeChatHandler"
@@ -87,9 +88,15 @@ end
     end
 #create("text");return
 =end
+if $*[0]
+    s = $*[1]
+    s = (SpyHandler::isI(s) ? "" : "!")+s
+    puts Debugwx::req($*[0],s )
+    return
+end
 p "@"*11
 	total = 4
-    puts s = Debugwx::req("o"+rand(3).to_s, "！new #{total} 1  ren   bai ")
+    puts s = Debugwx::req("o"+rand(3).to_s, "！new #{total} 1 ")
     s = Debugwx::findGid(s).to_i
     total.downto(1){|x| u = "u"+rand(44).to_s;puts "x=#{x},u=#{u},#{Debugwx::req(u.to_s,s)}"} if s.is_a?Integer
     
